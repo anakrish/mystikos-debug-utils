@@ -1,0 +1,23 @@
+#!/bin/bash
+# Utility to explore and execute commands in appdir
+
+# Pick appdir
+if [ -z "$APP_FS" ]; then
+    APP_FS=$PWD/appdir
+fi
+
+# Set up environment variables for chroot.
+export SHELL=/bin/sh
+export TERM=xterm-256color
+export PS1="app-exec \w$ "
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+
+# Unshare, mount and chroot.
+unshare --map-root-user  --pid --fork --mount --propagation unchanged \
+sh -c "
+  mount --rbind /opt \"$APP_FS/opt\"
+  mount -t proc /proc \"$APP_FS/proc\"
+  mount --rbind /dev \"$APP_FS/dev\"
+  mount --rbind  /sys \"$APP_FS/sys\"
+  mount --bind /etc/resolv.conf \"$APP_FS/etc/resolv.conf\"
+  chroot \"$APP_FS\" \$@ " app-exec "$@"

@@ -1,0 +1,24 @@
+#!/bin/bash
+# Utility to explore and execute commands in appdir
+
+# Pick appdir
+if [ -z "$APP_FS" ]; then
+    APP_FS=$PWD/appdir
+fi
+
+binds=""
+cd $APP_FS
+for d in *; do
+  case $d in
+    proc|dev|sys)
+      continue
+  esac
+  if [ -d "$d" ]; then
+     binds="$binds -v $APP_FS/$d:/$d"
+  fi
+done
+echo $binds
+
+sudo docker run --rm $binds \
+  -it alpine \
+  sh -c "\$@" docker-exec "$@"
